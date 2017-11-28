@@ -1,7 +1,7 @@
 # ACI Networking Integration
 ![Automatic ACI Configuration](/images/automatic-aci-configuration.png)
 
-This integration uses ACI provide automatic application-level network isolation for Kubernetes workloads deployed with Apprenda.
+This integration uses ACI to provide automatic application-level network isolation for Kubernetes workloads deployed with Apprenda.
 
 ### Supported Software Versions
 |Software|Min Version|Max Version|
@@ -17,7 +17,7 @@ This integration uses ACI provide automatic application-level network isolation 
 * The ability to access the developer portal from all Windows nodes
 
 ### Kubernetes Installation with the ACI CNI
-*We'll be using the [Kismatic Enterprise Toolkit (KET)](https://github.com/apprenda/kismatic) for ease of installing Kubernetes*
+*We'll be using the [Kismatic Enterprise Toolkit (KET)](https://github.com/apprenda/kismatic) for installing Kubernetes*
 1. Follow steps provided in the [guide](https://github.com/apprenda/kismatic/blob/master/docs/install.md) in order to generate your kismatic-cluster.yaml
 2. To specify a custom CNI provider for KET, modify your kismatic-cluster.yaml and change the provider to "custom" as shown below:
       ```
@@ -60,10 +60,10 @@ This integration uses ACI provide automatic application-level network isolation 
 
 The integration provides the following kubernetes-specific component custom properties to developers. These custom properties direct automatic ACI configuration on application promotion. ACI objects created by the integration will automatically be removed on application demotion or deletion. An application must be promoted for any changes to the custom properties to take effect.
 1. **APIC Tenant** - Used for specifying the tenant to configure in APIC. This must coincide with the cluster that your application will be deployed to.
-1. **Application Ports** - Used for specifying the set of ports and protocols over which your application will accept traffic. Each entry must be supplied in the format: name/port/protocol. "unspecified" may be used as a wildcard the port and/or protocol.
-2. **Apprenda Network** - Used for specifying the group of applications that will be allowed access to your application. Selecting "None" will result in the application being added to the "kube-default" EPG.
-3. **Consumed Contracts** - Used for specifying existing contracts (services) that your application should consume. You may specify any contract residing in the specified APIC tenant or in the common tenant.
-4. **Provided Contracts** - Used for specifying existing contracts (services) that your application should provide. You may specify any contract residing in the specified APIC tenant or in the common tenant.
+2. **Application Ports** - Used for specifying the set of ports and protocols over which your application will accept traffic. Each entry must be supplied in the format: name/port/protocol. "unspecified" may be used as a wildcard the port and/or protocol.
+3. **Apprenda Network** - Used for specifying the group of applications that will be allowed access to your application. Selecting "None" will result in the application being added to the "kube-default" EPG.
+4. **Consumed Contracts** - Used for specifying existing contracts (services) that your application should consume. You may specify any contract residing in the specified APIC tenant or in the common tenant.
+5. **Provided Contracts** - Used for specifying existing contracts (services) that your application should provide. You may specify any contract residing in the specified APIC tenant or in the common tenant.
 
 ## Troubleshooting
 The log can be accessed by launching the application and navigating to /log.
