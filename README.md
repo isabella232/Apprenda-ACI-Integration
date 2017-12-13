@@ -75,8 +75,6 @@ kubectl apply -f aci-containers.yaml
 6. Install ```/etc/kubernetes/pki/ca.crt``` on all Windows application and web nodes as a local computer trusted system root
 7. Add the cluster to Apprenda using the Clouds page in the SOC
 
-## Adding Kubernetes to Apprenda
-
 ## Integration Installation
 *These steps take place on the LM node unless specified otherwise. These steps require the Apprenda SDK on the LM node.*
 1. Run ```GenerateCertificate.ps1``` to generate the credentials-encrypting certificate
