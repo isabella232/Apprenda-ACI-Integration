@@ -1,9 +1,12 @@
 # ACI Networking Integration
 ![Automatic ACI Configuration](/images/automatic-aci-configuration.png)
 
-This integration uses ACI to provide automatic application-level network isolation for Kubernetes workloads deployed by Apprenda. Details of the installation process can be found in [**Cisco's CNI documentation**](https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/kb/b_Kubernetes_Integration_with_ACI.html).
+This integration extends Apprenda's automated application deployment to include automated application-level network configuration. It takes advantage of the flexibility of ACI to not only provide developers with multiple modes of application isolation, but also to connect their Kubernetes applications with on or off platform non-Kubernetes applications. Details of the installation process can be found in [**Cisco's CNI documentation**](https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/kb/b_Kubernetes_Integration_with_ACI.html).
 
-### Supported Software Versions
+* [**Installation Video**](https://apprenda.wistia.com/medias/9cecof71wi#)
+* [**Usage Video**](https://apprenda.wistia.com/medias/15fp6svfes#)
+
+#### Supported Software Versions
 |Software|Min Version|Max Version|
 |-|-|-|
 |Apprenda|8.0|8.0|
@@ -17,7 +20,7 @@ This integration uses ACI to provide automatic application-level network isolati
 * A contract residing in the common tenant for communication with the Apprenda instance
 * A L3 out configured in ACI
 * A dedicated AD account for the integration
-* A unassigned NIC cabled to leaf(s) on the ACI fabric on each ESXi Kubernetes node host
+* A unassigned NIC cabled to leaf(s) in the ACI fabric on each ESXi Kubernetes node host
 * An AEP configured in ACI for the ports cabled to the ESXi hosts
 
 ## ACI Configuration
@@ -101,12 +104,12 @@ The integration provides the following kubernetes-specific component custom prop
 2. **Application Ports** - Used for specifying the set of ports and protocols over which the developer's application will accept traffic. Each entry must be supplied in the format: name/port/protocol ([a-z0-9-]+/1-65535|unspecified/tcp|udp|icmp|unspecified). "unspecified" may be used as a wildcard for the port and/or protocol. The port must be set to "unspecified" when the protocol is ICMP or unspecified.
 3. **Apprenda Network** - Used for specifying the group of applications that will be allowed access to the developer's application. Selecting "Common" will result in the application being added to the "kube-default" EPG.
 4. **Consumed Services** - Used for specifying services external to the specified Apprenda Network that the developer's application requires access to. These options must correspond to contracts residing in the specified APIC tenant or in the common tenant.
-5. **Provided Contracts** - Used for specifying services external to the specified Apprenda Network that the developer's application provides. These options must correspond to contracts residing in the specified APIC tenant or in the common tenant.
+5. **Provided Services** - Used for specifying services external to the specified Apprenda Network that the developer's application provides. These options must correspond to contracts residing in the specified APIC tenant or in the common tenant.
 
 ## Troubleshooting
 The log can be accessed by launching the application and navigating to /log.
 * Failure to save credentials
-  1. Check that all Windows nodes have the "APICProxy" certificate installed under LocalMachine/Personal/Certificates
+  1. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates
 * Failure to promote
   1. Check that all Windows nodes can access the developer portal
   2. Check that correct service URLs and credentials are configured
