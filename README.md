@@ -22,6 +22,7 @@ This integration extends Apprenda's automated application deployment to include 
 * A dedicated AD account for the integration
 * A unassigned NIC cabled to leaf(s) in the ACI fabric on each ESXi Kubernetes node host
 * An AEP configured in ACI for the ports cabled to the ESXi hosts
+* Valid certificates for all encrypted connections
 
 ## ACI Configuration
 1. Use pip to install ```acc-provision``` on the master node:
@@ -71,35 +72,37 @@ kubeadm init --config config.yaml
 ```
 kubectl apply -f aci-containers.yaml
 ```
+6. Install ```/etc/kubernetes/pki/ca.crt``` on all Windows application and web nodes as a local computer trusted system root
+7. Add the cluster to Apprenda using the Clouds page in the SOC
+
+## Adding Kubernetes to Apprenda
 
 ## Integration Installation
 *These steps take place on the LM node unless specified otherwise. These steps require the Apprenda SDK on the LM node.*
 1. Run ```GenerateCertificate.ps1``` to generate the credentials-encrypting certificate
-2. Copy the certificate created by step 2 and ```ProvisionNode.ps1``` to each Windows app and web node
-3. Run ```ProvisionNode.ps1``` on each Windows app and web node
+2. Copy the certificate created by step 1 and ```ProvisionNode.ps1``` to each Windows application and web node
+3. Run ```ProvisionNode.ps1``` on each Windows application and web node to import the certificate, grant the AD account read access to the private key, and grant "Log on as service" to the AD account
     * Pass the prerequisite AD account credentials to the script
-    * This will import the certificate, grant the AD account read access to the private key, and grant "Log on as service" to the AD account
 4. Run ```CustomizeArchive.ps1``` to embed the AD account credentials in the archive
-6. Run ```ConfigureApprenda.ps1```
+6. Run ```ConfigureApprenda.ps1``` to create and promote the APIC Proxy application, create all the necessary custom properties, and create the APIC Proxy bootstrapper
     * Pass the optional credentials to the script to save them in the database
     * Pass the optional consumed or provided services to add them as options to the respective custom property
-    * This will create and promote the APIC Proxy application, create all the necessary custom properties, and create the APIC Proxy bootstrapper
     
 ## Verification
 1. Launch the APIC Proxy UI and verify that credentials are configured for APIC and Kubernetes
-2. Review the log (/log) and verify that the service is watching for changes to replica sets
+2. Review the APIC Proxy log (/log) and verify that the service is watching for changes to replica sets
 3. Create a new application using the provided ```connectivity-pod.yaml```
 4. Promote the application to sandbox
 5. Use APIC to verify that an ANP, EPG, contract, and filter were created
-6. Verify that the Connectivity Pod web UI can be accessed by launching the application from the developer portal
-7. Use the Connectivity Pod web UI to verify connectivity with external resources
+6. Verify that the Connectivity Pod UI can be accessed by launching the application from the developer portal
+7. Use the Connectivity Pod UI to verify connectivity with external resources
 8. Demote the application
 9. Use APIC to verify that the ANP, EPG, contract, and filter were removed
 
 ## Usage
 ![Component Custom Properties](/images/component-custom-properties.png)
 
-The integration provides the following kubernetes-specific component custom properties to developers. These custom properties direct automatic ACI configuration on application promotion. ACI objects created by the integration will automatically be removed on application demotion or deletion. An application must be patched or promoted for any changes to the custom properties to take effect.
+The integration provides the following kubernetes-specific component custom properties to developers. These custom properties direct automatic ACI configuration on application promotion. ACI objects created by the integration for an application are automatically removed on demotion or deletion. An application must be patched or promoted for any changes to custom properties to take effect.
 1. **APIC Tenant** - Used for specifying the tenant to configure in APIC. This must coincide with the cluster that the developer's application will be deployed to.
 2. **Application Ports** - Used for specifying the set of ports and protocols over which the developer's application will accept traffic. Each entry must be supplied in the format: name/port/protocol ([a-z0-9-]+/1-65535|unspecified/tcp|udp|icmp|unspecified). "unspecified" may be used as a wildcard for the port and/or protocol. The port must be set to "unspecified" when the protocol is ICMP or unspecified.
 3. **Apprenda Network** - Used for specifying the group of applications that will be allowed access to the developer's application. Selecting "Common" will result in the application being added to the "kube-default" EPG.
@@ -107,18 +110,19 @@ The integration provides the following kubernetes-specific component custom prop
 5. **Provided Services** - Used for specifying services external to the specified Apprenda Network that the developer's application provides. These options must correspond to contracts residing in the specified APIC tenant or in the common tenant.
 
 ## Troubleshooting
-The log can be accessed by launching the application and navigating to /log.
+The log can be accessed by launching the APIC Proxy and navigating to /log.
 * Failure to save credentials
   1. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates
 * Failure to promote
   1. Check that all Windows nodes can access the developer portal
-  2. Check that correct service URLs and credentials are configured
+  2. Check that the correct APIC URL and credentials are configured
   3. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key
   4. Check that the ACI CNI has been correctly configured for the ACI environment
-* Failure to remove ACI resources on demote
+* Failure to remove ACI objects on demote
   1. Check that the workload had been removed from Kubernetes
-  2. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key
-  3. Check that the AD account has been granted "Log on as service" in Local Group Policy on all Windows nodes
+  2. Check that the correct Kubernetes URL and credentials are configured
+  3. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key
+  4. Check that the AD account has been granted "Log on as service" in Local Group Policy on all Windows nodes
 
 ## Known Issues
 * [APPRENDA-24382](https://apprenda.atlassian.net/browse/APPRENDA-24382): During Apprenda installation, host entries for the default cloud are added the hosts file on all Windows nodes. These entries must be removed for the integration to connect to the developer portal.
