@@ -5,6 +5,7 @@ This integration extends Apprenda's automated application deployment to include 
 
 * [**Installation Video**](https://apprenda.wistia.com/medias/9cecof71wi#)
 * [**Usage Video**](https://apprenda.wistia.com/medias/15fp6svfes#)
+* [**Overview Video**](https://apprenda.wistia.com/medias/rvowaka2ym#)
 
 #### Supported Software Versions
 |Software|Min Version|Max Version|
