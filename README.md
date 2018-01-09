@@ -10,10 +10,10 @@ This integration extends Apprenda's automated application deployment to include 
 #### Supported Software Versions
 |Software|Min Version|Max Version|
 |-|-|-|
-|Apprenda|8.0|8.0|
-|Kubernetes|1.6.0|1.6.12|
-|ACC|1.6.0|1.6.0|
-|ACI|3.0(1j)|3.0(2h)|
+|Apprenda|8.0|8.1|
+|Kubernetes|1.6.X|1.7.X|
+|ACC|1.6.0|1.7.1|
+|ACI|3.0(1j)|3.1(1i)|
 |CentOS|7|7|
 
 ## Prerequisites

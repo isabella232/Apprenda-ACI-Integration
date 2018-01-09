@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+### Fixed
+- Fixed intermittent failures removing resources in ACI.
+
 ## 1.0.1
 ### Changed
 - Log only renders the most recent 1000 messages.
