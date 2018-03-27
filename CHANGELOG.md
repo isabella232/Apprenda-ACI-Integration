@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+### Changed
+- Updated scripts to use [**PSApprendaApi**](https://www.powershellgallery.com/packages/PSApprendaApi).
+### Fixed
+- Improper registry setting handling when other developer portal extension services are present
+
 ## 1.0.2
 ### Fixed
 - Fixed intermittent failures removing resources in ACI.

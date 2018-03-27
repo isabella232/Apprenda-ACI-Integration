@@ -10,7 +10,7 @@ This integration extends Apprenda's automated application deployment to include 
 #### Supported Software Versions
 |Software|Min Version|Max Version|
 |-|-|-|
-|Apprenda|8.0|8.1|
+|Apprenda|8.0|8.2|
 |Kubernetes|1.6.X|1.7.X|
 |ACC|1.6.0|1.7.1|
 |ACI|3.0(1j)|3.1(1i)|
@@ -27,19 +27,19 @@ This integration extends Apprenda's automated application deployment to include 
 
 ## ACI Configuration
 1. Use pip to install ```acc-provision``` on the master node:
-```
-pip install acc-provision==1.6.0
-```
+	```
+	pip install acc-provision
+	```
 2. Generate the sample provisioning YAML:
-```
-acc-provision --sample > aci-containers-config.yaml
-```
+	```
+	acc-provision --sample > aci-containers-config.yaml
+	```
 3. Edit the provisioning YAML for your environment
     * The infrastructure VLAN ID must match that of your ACI environment
 4. Use ```acc-provision``` with the edited ```aci-containers-config.yaml``` to configure ACI:
-```
-acc-provision -c aci-containers-config.yaml -o aci-containers.yaml -a -u username -p password
-```
+	```
+	acc-provision -c aci-containers-config.yaml -o aci-containers.yaml -a -u username -p password
+	```
 5. Configure the ```kube-nodes``` and ```kube-system``` EPGs in the provisioned tenant to consume the Apprenda contract
 
 ## vCenter Configuration
@@ -49,6 +49,7 @@ acc-provision -c aci-containers-config.yaml -o aci-containers.yaml -a -u usernam
 
 ## Node Configuration
 *This process installs specific versions of Docker and Kubenetes. Any previous versions must be uninstalled before running ```config.sh```. These steps must be completed on all Kubernetes nodes.*
+
 1. Edit the provided ```config.sh``` with the details of the respective node
 2. Run the edited ```config.sh```
 3. Mark all management interfaces as not the default route
@@ -58,6 +59,7 @@ acc-provision -c aci-containers-config.yaml -o aci-containers.yaml -a -u usernam
 
 ## Kubernetes Installation
 *We'll be using kubeadm for installing Kubernetes. These steps take place on the master node unless specified otherwise.*
+
 1. Edit the provided ```config.yaml``` and ```basic_auth.csv``` for your environment
     * ABAC must be specified as the authorization mode for the cluster to be usable by Apprenda
 2. Copy the provided ```abac_policy.json``` and the edited ```basic_auth.csv``` to ```/etc/kubernetes```
@@ -78,30 +80,37 @@ kubectl apply -f aci-containers.yaml
 
 ## Integration Installation
 *These steps take place on the LM node unless specified otherwise. These steps require the Apprenda SDK on the LM node.*
-1. Run ```GenerateCertificate.ps1``` to generate the credentials-encrypting certificate
+
+1. Run ```generate-certificate.ps1``` to generate the credentials-encrypting certificate
 2. Copy the certificate created by step 1 and ```ProvisionNode.ps1``` to each Windows application and web node
-3. Run ```ProvisionNode.ps1``` on each Windows application and web node to import the certificate, grant the AD account read access to the private key, and grant "Log on as service" to the AD account
+3. Run ```provision-node.ps1``` on each Windows application and web node to import the certificate, grant the AD account read access to the private key, and grant "Log on as service" to the AD account
     * Pass the prerequisite AD account credentials to the script
-4. Run ```CustomizeArchive.ps1``` to embed the AD account credentials in the archive
-6. Run ```ConfigureApprenda.ps1``` to create and promote the APIC Proxy application, create all the necessary custom properties, and create the APIC Proxy bootstrapper
-    * Pass the optional credentials to the script to save them in the database
+4. Run ```customize-archive.ps1``` to embed the AD account credentials in the archive
+5. Run ```install-integration.ps1``` to create and promote the APIC Proxy application, create all the necessary custom properties, and create the APIC Proxy bootstrapper
     * Pass the optional consumed or provided services to add them as options to the respective custom property
-    
+	* This script requires the [**PSApprendaApi**](https://www.powershellgallery.com/packages/PSApprendaApi) module for PowerShell. It can be installed with the following command:
+	```
+	Install-Module -Name "PSApprendaApi"
+	```
+	
+## Configuration
+1. Launch the APIC Proxy UI and enter/save the credentials for your APIC and Kubernetes cluster
+
 ## Verification
-1. Launch the APIC Proxy UI and verify that credentials are configured for APIC and Kubernetes
-2. Review the APIC Proxy log (/log) and verify that the service is watching for changes to replica sets
-3. Create a new application using the provided ```connectivity-pod.yaml```
-4. Promote the application to sandbox
-5. Use APIC to verify that an ANP, EPG, contract, and filter were created
-6. Verify that the Connectivity Pod UI can be accessed by launching the application from the developer portal
-7. Use the Connectivity Pod UI to verify connectivity with external resources
-8. Demote the application
-9. Use APIC to verify that the ANP, EPG, contract, and filter were removed
+1. Review the APIC Proxy log (/log) and verify that the service is watching for changes to replica sets
+2. Create a new application using the provided ```connectivity-pod.yaml```
+3. Promote the application to sandbox
+4. Use APIC to verify that an ANP, EPG, contract, and filter were created
+5. Verify that the Connectivity Pod UI can be accessed by launching the application from the developer portal
+6. Use the Connectivity Pod UI to verify connectivity with external resources
+7. Demote the application
+8. Use APIC to verify that the ANP, EPG, contract, and filter were removed
 
 ## Usage
 ![Component Custom Properties](/images/component-custom-properties.png)
 
 The integration provides the following kubernetes-specific component custom properties to developers. These custom properties direct automatic ACI configuration on application promotion. ACI objects created by the integration for an application are automatically removed on demotion or deletion. An application must be patched or promoted for any changes to custom properties to take effect.
+
 1. **APIC Tenant** - Used for specifying the tenant to configure in APIC. This must coincide with the cluster that the developer's application will be deployed to.
 2. **Application Ports** - Used for specifying the set of ports and protocols over which the developer's application will accept traffic. Each entry must be supplied in the format: name/port/protocol ([a-z0-9-]+/1-65535|unspecified/tcp|udp|icmp|unspecified). "unspecified" may be used as a wildcard for the port and/or protocol. The port must be set to "unspecified" when the protocol is ICMP or unspecified.
 3. **Apprenda Network** - Used for specifying the group of applications that will be allowed access to the developer's application. Selecting "Common" will result in the application being added to the "kube-default" EPG.
@@ -110,6 +119,7 @@ The integration provides the following kubernetes-specific component custom prop
 
 ## Troubleshooting
 The log can be accessed by launching the APIC Proxy and navigating to /log.
+
 * Failure to save credentials
   1. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates
 * Failure to promote
