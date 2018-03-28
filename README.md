@@ -90,7 +90,7 @@ kubectl apply -f aci-containers.yaml
     * Pass the optional consumed or provided services to add them as options to the respective custom property
 	* This script requires the [**PSApprendaApi**](https://www.powershellgallery.com/packages/PSApprendaApi) module for PowerShell. It can be installed with the following command:
 	```
-	Install-Module -Name "PSApprendaApi"
+	Install-Module PSApprendaApi
 	```
 	
 ## Configuration
