@@ -17,94 +17,92 @@ This integration extends Apprenda's automated application deployment to include 
 |CentOS|7|7|
 
 ## Prerequisites
-* An Apprenda instance networked to EPG(s) in ACI
-* A contract residing in the common tenant for communication with the Apprenda instance
-* A L3 out configured in ACI
-* A dedicated AD account for the integration
-* A unassigned NIC cabled to leaf(s) in the ACI fabric on each ESXi Kubernetes node host
-* An AEP configured in ACI for the ports cabled to the ESXi hosts
-* Valid certificates for all encrypted connections
+* An Apprenda instance networked to EPG(s) in ACI.
+* A contract residing in the common tenant for communication with the Apprenda instance.
+* A L3 out configured in ACI.
+* A dedicated AD account for the integration.
+* A unassigned NIC cabled to leaf(s) in the ACI fabric on each ESXi Kubernetes node host.
+* An AEP configured in ACI for the ports cabled to the ESXi hosts.
+* Valid certificates for all encrypted connections.
 
 ## ACI Configuration
 1. Use pip to install ```acc-provision``` on the master node:
-	```
-	pip install acc-provision
-	```
+
+        pip install acc-provision
+
 2. Generate the sample provisioning YAML:
-	```
-	acc-provision --sample > aci-containers-config.yaml
-	```
-3. Edit the provisioning YAML for your environment
-    * The infrastructure VLAN ID must match that of your ACI environment
+
+        acc-provision --sample > aci-containers-config.yaml
+
+3. Edit the provisioning YAML for your environment.
+    * The infrastructure VLAN ID must match that of your ACI environment.
 4. Use ```acc-provision``` with the edited ```aci-containers-config.yaml``` to configure ACI:
-	```
-	acc-provision -c aci-containers-config.yaml -o aci-containers.yaml -a -u username -p password
-	```
-5. Configure the ```kube-nodes``` and ```kube-system``` EPGs in the provisioned tenant to consume the Apprenda contract
+
+        acc-provision -c aci-containers-config.yaml -o aci-containers.yaml -a -u username -p password
+
+5. Configure the ```kube-nodes``` and ```kube-system``` EPGs in the provisioned tenant to consume the Apprenda contract.
 
 ## vCenter Configuration
-1. Create a distributed switch configured for 1600 MTU and assign it to the prerequisite unused NIC(s)
-2. Create a distributed port group configured for VLAN trunking and enable forged transmits
-3. Create additional NIC(s) on all Kubernetes nodes configured for the distributed port group
+1. Create a distributed switch configured for 1600 MTU and assign it to the prerequisite unused NIC(s).
+2. Create a distributed port group configured for VLAN trunking and enable forged transmits.
+3. Create additional NIC(s) on all Kubernetes nodes configured for the distributed port group.
 
 ## Node Configuration
 *This process installs specific versions of Docker and Kubenetes. Any previous versions must be uninstalled before running ```config.sh```. These steps must be completed on all Kubernetes nodes.*
 
-1. Edit the provided ```config.sh``` with the details of the respective node
-2. Run the edited ```config.sh```
-3. Mark all management interfaces as not the default route
-    * The Kubernetes API VLAN interface should be the only interface **not** marked as not the default route
-4. Reboot the node
-
+1. Edit the provided ```config.sh``` with the details of the respective node.
+2. Run the edited ```config.sh```.
+3. Mark all management interfaces as not the default route.
+    * The Kubernetes API VLAN interface should be the only interface **not** marked as not the default route.
+4. Reboot the node.
 
 ## Kubernetes Installation
-*We'll be using kubeadm for installing Kubernetes. These steps take place on the master node unless specified otherwise.*
+*We'll be using ```kubeadm``` for installing Kubernetes. These steps take place on the master node unless specified otherwise.*
 
-1. Edit the provided ```config.yaml``` and ```basic_auth.csv``` for your environment
-    * ABAC must be specified as the authorization mode for the cluster to be usable by Apprenda
-2. Copy the provided ```abac_policy.json``` and the edited ```basic_auth.csv``` to ```/etc/kubernetes```
+1. Edit the provided ```config.yaml``` and ```basic_auth.csv``` for your environment.
+    * ABAC must be specified as the authorization mode for the cluster to be usable by Apprenda.
+2. Copy the provided ```abac_policy.json``` and the edited ```basic_auth.csv``` to ```/etc/kubernetes```.
 3. Use ```kubeadm``` with the edited ```config.yaml``` to install Kubernetes:
-```
-kubeadm init --config config.yaml
-```
-4. Follow the instructions printed to the console by ```kubeadm init```
-    * Copy ```/etc/kubernetes/admin.conf``` to your home directory
-    * Set the ```KUBECONFIG``` environment variable
-    * Execute the ```kubeadm join``` command on each of the worker nodes
+
+        kubeadm init --config config.yaml
+
+4. Follow the instructions printed to the console by ```kubeadm init```.
+    * Copy ```/etc/kubernetes/admin.conf``` to your home directory.
+    * Set the ```KUBECONFIG``` environment variable.
+    * Execute the ```kubeadm join``` command on each of the worker nodes.
 5. Use ```kubectl``` to apply the CNI YAML generated by ```acc-provision```:
-```
-kubectl apply -f aci-containers.yaml
-```
-6. Install ```/etc/kubernetes/pki/ca.crt``` on all Windows application and web nodes as a local computer trusted system root
-7. Add the cluster to Apprenda using the Clouds page in the SOC
+
+        kubectl apply -f aci-containers.yaml
+
+6. Install ```/etc/kubernetes/pki/ca.crt``` on all Windows application and web nodes as a local computer trusted system root.
+7. Add the cluster to Apprenda using the Clouds page in the SOC.
 
 ## Integration Installation
 *These steps take place on the LM node unless specified otherwise. These steps require the Apprenda SDK on the LM node.*
 
-1. Run ```generate-certificate.ps1``` to generate the credentials-encrypting certificate
-2. Copy the certificate created by step 1 and ```ProvisionNode.ps1``` to each Windows application and web node
-3. Run ```provision-node.ps1``` on each Windows application and web node to import the certificate, grant the AD account read access to the private key, and grant "Log on as service" to the AD account
-    * Pass the prerequisite AD account credentials to the script
-4. Run ```customize-archive.ps1``` to embed the AD account credentials in the archive
-5. Run ```install-integration.ps1``` to create and promote the APIC Proxy application, create all the necessary custom properties, and create the APIC Proxy bootstrapper
-    * Pass the optional consumed or provided services to add them as options to the respective custom property
-	* This script requires the [**PSApprendaApi**](https://www.powershellgallery.com/packages/PSApprendaApi) module for PowerShell. It can be installed with the following command:
-	```
-	Install-Module PSApprendaApi
-	```
-	
+1. Run ```generate-certificate.ps1``` to generate the credentials-encrypting certificate.
+2. Copy the certificate created by step 1 and ```ProvisionNode.ps1``` to each Windows application and web node.
+3. Run ```provision-node.ps1``` on each Windows application and web node to import the certificate, grant the AD account read access to the private key, and grant "Log on as service" to the AD account.
+    * Pass the prerequisite AD account credentials to the script.
+4. Run ```customize-archive.ps1``` to embed the AD account credentials in the archive.
+5. Run ```install-integration.ps1``` to create and promote the APIC Proxy application, create all the necessary custom properties, and create the APIC Proxy bootstrapper.
+    * Pass the optional consumed or provided services to add them as options to the respective custom property.
+    * This script requires the [**PSApprendaApi**](https://www.powershellgallery.com/packages/PSApprendaApi) module for PowerShell. It can be installed with the following command:
+
+            Install-Module PSApprendaApi
+
 ## Configuration
-1. Launch the APIC Proxy UI and enter/save the credentials for your APIC and Kubernetes cluster
+1. Launch the APIC Proxy UI and enter/save the credentials for your APIC and Kubernetes cluster.
 
 ## Verification
-1. Review the APIC Proxy log (/log) and verify that the service is watching for changes to replica sets
-2. Create a new application using the provided ```connectivity-pod.yaml```
-3. Promote the application to sandbox
-4. Use APIC to verify that an ANP, EPG, contract, and filter were created
-5. Verify that the Connectivity Pod UI can be accessed by launching the application from the developer portal
-6. Use the Connectivity Pod UI to verify connectivity with external resources
-7. Demote the application
-8. Use APIC to verify that the ANP, EPG, contract, and filter were removed
+1. Review the APIC Proxy log (/log) and verify that the service is watching for changes to replica sets.
+2. Create a new application using the provided ```connectivity-pod.yaml```.
+3. Promote the application to sandbox.
+4. Use APIC to verify that an ANP, EPG, contract, and filter were created.
+5. Verify that the Connectivity Pod UI can be accessed by launching the application from the developer portal.
+6. Use the Connectivity Pod UI to verify connectivity with external resources.
+7. Demote the application.
+8. Use APIC to verify that the ANP, EPG, contract, and filter were removed.
 
 ## Usage
 ![Component Custom Properties](/images/component-custom-properties.png)
@@ -120,18 +118,18 @@ The integration provides the following kubernetes-specific component custom prop
 ## Troubleshooting
 The log can be accessed by launching the APIC Proxy and navigating to /log.
 
-* Failure to save credentials
-  1. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates
-* Failure to promote
-  1. Check that all Windows nodes can access the developer portal
-  2. Check that the correct APIC URL and credentials are configured
-  3. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key
-  4. Check that the ACI CNI has been correctly configured for the ACI environment
-* Failure to remove ACI objects on demote
-  1. Check that the workload had been removed from Kubernetes
-  2. Check that the correct Kubernetes URL and credentials are configured
-  3. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key
-  4. Check that the AD account has been granted "Log on as service" in Local Group Policy on all Windows nodes
+* Failure to save credentials:
+    1. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates.
+* Failure to promote:
+    1. Check that all Windows nodes can access the developer portal.
+    2. Check that the correct APIC URL and credentials are configured.
+    3. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key.
+    4. Check that the ACI CNI has been correctly configured for the ACI environment.
+* Failure to remove ACI objects on demote:
+    1. Check that the workload had been removed from Kubernetes.
+    2. Check that the correct Kubernetes URL and credentials are configured.
+    3. Check that all Windows nodes have the APICProxy certificate installed under LocalMachine/Personal/Certificates and that the AD account has been granted read access to the private key.
+    4. Check that the AD account has been granted "Log on as service" in Local Group Policy on all Windows nodes.
 
 ## Known Issues
 * [APPRENDA-24382](https://apprenda.atlassian.net/browse/APPRENDA-24382): During Apprenda installation, host entries for the default cloud are added the hosts file on all Windows nodes. These entries must be removed for the integration to connect to the developer portal.
